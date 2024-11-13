@@ -1,0 +1,185 @@
+---
+title: "data_visualization_hackathon"
+author: "Sohrab Khan"
+date: "2024-07-26"
+output:
+  pdf_document: default
+  html_document:
+    highlight: tango
+    theme: cerulean
+---
+# **Hackathon: Data Visualization in R**
+
+## **Load and Install Repositories and Packages**
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(dplyr)
+```
+## **Create a data folder manually or use R code mentioned below**
+```{r}
+dir.create("hackathon_data_visualization")
+```
+## **Download example data**
+```{r}
+url <- "https://raw.githubusercontent.com/AMMnet/AMMnet-Hackathon/main/01_data-vis/data/"
+download.file(paste0(url,"mockdata_cases.csv"),
+              destfile = "hackathon_data_visualization/mockdata_cases.csv")
+download.file("https://raw.githubusercontent.com/AMMnet/AMMnet-Hackathon/main/01_data-vis/data/mosq_mock.csv", destfile = "hackathon_data_visualization/mosq_mock.csv")
+```
+## **Load example data**
+```{r}
+library(readr)
+malaria_data <- read_csv("hackathon_data_visualization/mockdata_cases.csv")
+View(malaria_data)
+mosq_data <- read_csv("hackathon_data_visualization/mosq_mock.csv")
+View(mosq_data)
+```
+## **Characterize means Exploring our data**
+### **How many rows and columns**
+```{r}
+dim(malaria_data)
+```
+
+### **General information**
+```{r}
+head(malaria_data)
+summary(malaria_data)
+```
+### **Exploring individual columns of the data**
+```{r}
+malaria_data$location # values for a single column
+unique(malaria_data$location) # unique values for a single column
+table(malaria_data$location) # frequencies for a single column
+table(malaria_data$location, malaria_data$ages) # frequencies for multiple column
+```
+### **Check for if there are any missing values- NA**
+```{r}
+sum(is.na(malaria_data))
+```
+## **Exploratory Visualizations Using Base R Functions**
+### **Single variable or column comparison**
+#### **Histogram or Frequency Chart
+```{r}
+hist(malaria_data$prev)
+hist(malaria_data$prev,
+     breaks = 10, # breaks mean how many individual bars do we need to group
+     main = "Distribution of Malaria Prevalence",
+     xlab = "Malaria Prevalence",
+     ylab = "Frequency",
+     col = "#701f28",
+     border = "black")
+```
+
+#### **Barplot- tell us the number of counts within a categorical variable/ column**
+```{r}
+barplot(table(malaria_data$location))
+barplot(table(malaria_data$year))
+```
+
+#### **Plotting Multiple column/ variable**
+##### **Scatterplot using R code - plot**
+```{r}
+plot(x = malaria_data$total, y = malaria_data$positive)
+plot(x = malaria_data$month, y = malaria_data$prev)
+```
+
+##### **Boxplot using R code - boxplot**
+```{r}
+boxplot(malaria_data$prev ~ malaria_data$location)
+boxplot(malaria_data$prev ~ malaria_data$month)
+boxplot(malaria_data$prev ~ malaria_data$month,
+        data = malaria_data,
+        xlab = "Malaria Month",
+        ylab = "Malaria Prevalence",
+        col = "#701f28",
+        border = "black")
+jan_data <- filter(malaria_data, month==1)
+boxplot(jan_data$prev ~ jan_data$month)
+boxplot
+```
+## **Step by Step Data Visualization using ggplot2**
+### **Data**
+```{r}
+ggplot(data = malaria_data)
+```
+
+### **Organize Data(aes())**
+```{r}
+ggplot(data = malaria_data, aes(x = total, y = positive))
+```
+
+### **Visualizing Data(geom_)**
+```{r}
+ggplot(data = malaria_data, aes(x = total, y = positive)) + geom_point()
+ggplot(data = malaria_data, aes(x = positive)) + geom_histogram(bins = 25)
+ggplot(data = malaria_data, aes(x = month)) + geom_bar(fill = "tomato")
+```
+
+### **Add multiple geoms_**
+```{r}
+ggplot(data = malaria_data, aes(x = location, y = prev)) + geom_boxplot()+
+  geom_jitter(alpha = 0.2) #Boxplot shows value for the range but they don't show distribution
+ggplot(data = malaria_data, aes(x = location, y = prev)) + geom_violin(fill= "darkorchid2")+
+  geom_jitter(alpha = 0.2) #Similar to the boxplot but the shape is different shows distribution
+ggplot(data = malaria_data, aes(x = total, y = positive)) + geom_point() +  geom_smooth(method = "lm")
+```
+
+### **Extending the aesthetic**
+```{r}
+ggplot(data = malaria_data, aes(x = total, y = positive, colour = location)) + geom_point()
+ggplot(data = malaria_data, aes(x = prev, fill = ages)) + geom_histogram(colour = "black", bins = 17)
+ggplot(data = malaria_data, aes(x = location, y = prev, fill = location)) + geom_boxplot()+
+  geom_jitter(alpha = 0.2)
+ggplot(data = malaria_data, aes(x = total, y = positive, colour = location)) + geom_point()+ geom_smooth(method = "lm", se= FALSE) + theme_classic()
+ggplot(data = malaria_data, aes(x = location, y = prev, fill = location)) + geom_boxplot()+
+  geom_jitter(alpha = 0.2) +theme_classic() + theme(legend.position = "bottom")
+```
+
+#### **Add colour Palette automatic using scale fill brewer**
+```{r}
+ggplot(data = malaria_data, aes(x = location, y = prev, fill = location)) + geom_boxplot()+
+  geom_jitter(alpha = 0.2) +theme_classic() + scale_fill_brewer(palette = "RdPu")
+```
+
+#### **Add colour manually**
+```{r}
+ggplot(data = malaria_data, aes(x = location, y = prev, fill = location)) + geom_boxplot()+
+  geom_jitter(alpha = 0.2) +theme_classic() + scale_fill_manual(values = c("chartreuse", "chartreuse1", "chartreuse2","chartreuse3", "chartreuse4"))
+```
+
+#### **Use viridis package to create custom color palettes**
+```{r}
+library(viridis)
+ggplot(data = malaria_data, aes(x = total, y = positive, colour = prev)) + geom_point() +
+  scale_color_viridis(option = "magma")
+```
+
+#### **Small multiple plots using facet**
+```{r}
+ggplot(data = malaria_data, aes(x = total, y = positive, colour = prev)) + geom_point() +
+  scale_color_viridis(option = "magma") +
+  facet_wrap(~location)+theme_classic()
+```
+
+#### **Visualize continous data on a spectrum using scale color gradient**
+```{r}
+ggplot(data = malaria_data, aes(x = total, y = positive, colour = prev)) + geom_point() +
+  scale_color_gradient(low = "red", high = "#701f28")
+```
+
+#### **Adding title, subtitle and flipping x and y axis**
+```{r}
+ggplot(data = malaria_data, aes(x = location, y = prev, fill = location)) + geom_boxplot()+
+  geom_jitter(alpha = 0.2) +
+  facet_wrap(~ages) +
+  coord_flip() + # flips the x and y axis
+  theme_classic() + scale_fill_brewer(palette = "RdPu")+
+  labs(title = "Malaria Prevalence by Location and Age",
+       subtitle = "Data from 2018 - 2020",
+       x = "Location",
+       y = "Prevalence",
+       fill = "Age group")
+ggsave("malaria_age_prevalenceboxplot.png", width = 10, height = 6, units = "in", dpi = 300)
+```
